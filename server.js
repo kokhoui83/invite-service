@@ -1,17 +1,16 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const config = require('config')
 
 let app = express()
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
-let port = process.env.PORT || 3000
-
 app.use('/ping', (req, res) => {
   res.send('pong')
 })
 
-app.listen(port, function () {
-  console.log('Example app listening on port 3000!')
+app.listen(config.app.port, config.app.host, function () {
+  console.log(`app listening on port ${config.app.host}:${config.app.port}`)
 })
