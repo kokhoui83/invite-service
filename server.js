@@ -3,14 +3,33 @@ const bodyParser = require('body-parser')
 const config = require('config')
 const path = require('path')
 const fs = require('fs')
+const swaggerjsdoc = require('swagger-jsdoc')
+const pkg = require('./package')
 
-let app = express()
+const app = express()
+
+const options = {
+  swaggerDefinition: {
+    info: {
+      title: pkg.name,
+      version: pkg.version,
+    },
+  },
+  apis: ['./routes/*.js'],
+}
+
+const swaggerSpec = swaggerjsdoc(options)
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
 app.use('/ping', (req, res) => {
   res.send('pong')
+})
+
+app.get('/swagger.json', function(req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
 })
 
 const routesFolder = path.resolve(__dirname, './routes')
