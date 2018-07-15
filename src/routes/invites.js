@@ -23,7 +23,7 @@ module.exports = function ({ app }) {
    *      userId:
    *        type: string
    *        description: the user id that requested the invite to be generated
-   *        example: aleks@pulseid.com
+   *        example: aleks@example.com
    *      clientId:
    *        type: integer
    *        description: the client id for which this invite is generated
@@ -35,7 +35,7 @@ module.exports = function ({ app }) {
    *      appUrl:
    *        type: string
    *        description: environment url used by the SDK
-   *        example: https://test.pulseid.com/2.1
+   *        example: https://test.example.com/2.1
    */
 
   /**
@@ -52,31 +52,6 @@ module.exports = function ({ app }) {
    *        description: status
    */
   app.get('/invite', (req, res) => {
-    return res.status(200).json({ status: 'OK' })
-  })
-
-  /**
-   * @swagger
-   * /invite/validate:
-   *  post:
-   *    tags:
-   *    - invite
-   *    description: validate invite
-   *    produces:
-   *    - application/json
-   *    consumes:
-   *    - application/json
-   *    parameters:
-   *    - name: body
-   *      in: body
-   *      required: true
-   *      schema:
-   *        $ref: '#/definitions/validateInvite'
-   *    responses:
-   *      200:
-   *        description: status
-   */
-  app.post('/invite/validate', (req, res) => {
     return res.status(200).json({ status: 'OK' })
   })
 
@@ -102,6 +77,33 @@ module.exports = function ({ app }) {
    *        description: status
    */
   app.post('/invite/generate', (req, res) => {
+    console.log(req.body)
+    return res.status(200).json({ status: 'OK' })
+  })
+
+  /**
+   * @swagger
+   * /invite/validate:
+   *  post:
+   *    tags:
+   *    - invite
+   *    description: validate invite
+   *    produces:
+   *    - application/json
+   *    consumes:
+   *    - application/json
+   *    parameters:
+   *    - name: body
+   *      in: body
+   *      required: true
+   *      schema:
+   *        $ref: '#/definitions/validateInvite'
+   *    responses:
+   *      200:
+   *        description: status
+   */
+  app.post('/invite/validate', (req, res) => {
+    console.log(req.body)
     return res.status(200).json({ status: 'OK' })
   })
 }

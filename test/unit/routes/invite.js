@@ -34,8 +34,16 @@ describe('Routes - invite', () => {
   describe('POST /invite/generate', () => {
     context('generate invite', () => {
       it('shoudl return success', (done) => {
+        const data = {
+          userId: 'aleks@example.com',
+          clientId: 50,
+          appKey: '4d4f434841-373836313836303830-3430-616e64726f6964',
+          appUrl: 'https://test.example.com/2.1'
+        }
+
         request
           .post(`/invite/generate`)
+          .send(data)
           .expect(200)
           .end((err, res) => {
             if (err) { return done(err) }
@@ -52,8 +60,13 @@ describe('Routes - invite', () => {
   describe('POST /invite/validate', () => {
     context('validate invite', () => {
       it('shoudl return success', (done) => {
+        const data = {
+          inviteToken: 'd4f434'
+        }
+
         request
           .post(`/invite/validate`)
+          .send(data)
           .expect(200)
           .end((err, res) => {
             if (err) { return done(err) }
