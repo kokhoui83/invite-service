@@ -12,6 +12,7 @@
   "dependencies": {
     "config": "^1.30.0",
     "express": "^4.16.3",
+    "ht-schema": "^3.4.0",
     "swagger-jsdoc": "^1.9.7"
   },
   "devDependencies": {

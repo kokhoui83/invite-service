@@ -1,3 +1,4 @@
+const s = require('ht-schema')
 
 module.exports = function ({ app }) {
   /**
@@ -77,7 +78,19 @@ module.exports = function ({ app }) {
    *        description: status
    */
   app.post('/invite/generate', (req, res) => {
-    console.log(req.body)
+    const schema = s.Object({
+      userId: s.String(),
+      clientId: s.Number(),
+      appKey: s.String(),
+      appUrl: s.String()
+    })
+
+    try {
+      schema.validate(req.body)
+    } catch (error) {
+      return res.status(400).json({ status: 'FAILED', error: error.message })
+    }
+
     return res.status(200).json({ status: 'OK' })
   })
 
@@ -103,7 +116,16 @@ module.exports = function ({ app }) {
    *        description: status
    */
   app.post('/invite/validate', (req, res) => {
-    console.log(req.body)
+    const schema = s.Object({
+      inviteToken: s.String({ required: true })
+    })
+
+    try {
+      schema.validate(req.body)
+    } catch (error) {
+      return res.status(400).json({ status: 'FAILED', error: error.message })
+    }
+
     return res.status(200).json({ status: 'OK' })
   })
 }
