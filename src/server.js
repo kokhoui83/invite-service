@@ -44,11 +44,21 @@ module.exports = function (callback) {
     return callback(null, { app })
   }
 
-  app.listen(config.app.port, config.app.host, (err) => {
+  const server = app.listen(config.app.port, config.app.host, (err) => {
     if (err) {
       throw err
     }
 
     console.log(`app listening on port ${config.app.host}:${config.app.port}`)
+  })
+
+  process.on('SIGINT', () => {
+    console.log('Shutting down...')
+    server.close((err) => {
+      if (err) {
+        console.error(err)
+        process.exit(1)
+      }
+    })
   })
 }
