@@ -22,7 +22,7 @@ module.exports = class TokenManager {
   createInvite (info) {
     return this._hasExisting(info)
       .then(data => {
-        return data ? data : this._createToken(info)
+        return data ? data.token : this._createToken(info)
       })
   }
 

@@ -6,6 +6,8 @@ const fs = require('fs')
 const swaggerjsdoc = require('swagger-jsdoc')
 const pkg = require('../package')
 
+const TokenManager = require('./lib/token-manager')
+
 module.exports = function (callback) {
   const app = express()
 
@@ -33,11 +35,13 @@ module.exports = function (callback) {
     res.send(swaggerSpec);
   })
 
+  const tokenManager = new TokenManager()
+
   const routesFolder = path.resolve(__dirname, './routes')
   const routesFiles = fs.readdirSync(routesFolder).filter(file => { return /.js$/.test(file) })
 
   routesFiles.forEach(file => {
-    require(path.resolve(routesFolder, file))({ app })
+    require(path.resolve(routesFolder, file))({ app, tokenManager })
   })
 
   if (callback) {

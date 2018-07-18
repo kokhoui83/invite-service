@@ -1,6 +1,6 @@
 const s = require('ht-schema')
 
-module.exports = function ({ app }) {
+module.exports = function ({ app, tokenManager }) {
   /**
    * @swagger
    * definition:
@@ -91,7 +91,13 @@ module.exports = function ({ app }) {
       return res.status(400).json({ status: 'FAILED', error: error.message })
     }
 
-    return res.status(200).json({ status: 'OK' })
+    return tokenManager.createInvite(req.body)
+      .then(invite => {
+        return res.status(200).json({ status: 'OK', invite })
+      })
+      .catch(error => {
+        return res.status(500).json({ status: 'FAILED' })
+      })
   })
 
   /**
