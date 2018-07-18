@@ -1,4 +1,5 @@
 const s = require('ht-schema')
+const moment = require('moment')
 
 module.exports = function ({ app, tokenManager }) {
   /**
@@ -93,10 +94,13 @@ module.exports = function ({ app, tokenManager }) {
 
     return tokenManager.createInvite(req.body)
       .then(invite => {
-        return res.status(200).json({ status: 'OK', invite })
+        return res.status(200).json({
+          inviteToken: invite.token,
+          validTo: moment(invite.expired).utc().format('DD/MM/YYYY HH:mm:ss')
+        })
       })
       .catch(error => {
-        return res.status(500).json({ status: 'FAILED' })
+        return res.status(500).json({ status: 'FAILED', error: error.message })
       })
   })
 

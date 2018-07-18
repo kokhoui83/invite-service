@@ -22,7 +22,7 @@ module.exports = class TokenManager {
   createInvite (info) {
     return this._hasExisting(info)
       .then(data => {
-        return data ? data.token : this._createToken(info)
+        return data ? data : this._createToken(info)
       })
   }
 
@@ -64,7 +64,6 @@ module.exports = class TokenManager {
     data.expired = current.add(7, 'days').unix()
 
     return this._storeInviteToken(data)
-      .then(data => data.token )
   }
 
   /**
