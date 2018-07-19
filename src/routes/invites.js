@@ -39,6 +39,22 @@ module.exports = function ({ app, tokenManager }) {
    *        type: string
    *        description: environment url used by the SDK
    *        example: https://test.example.com/2.1
+   *  invites:
+   *    type: array
+   *    items:
+   *      type: object
+   *      required:
+   *      - userId
+   *      - active
+   *      properties:
+   *      userId:
+   *        type: string
+   *        description: the user id that requested the invite to be generated
+   *        example: aleks@example.com
+   *      active:
+   *        type: boolean
+   *        description: state of invite
+   *        example: true
    */
 
   /**
@@ -52,10 +68,21 @@ module.exports = function ({ app, tokenManager }) {
    *    - application/json
    *    responses:
    *      200:
-   *        description: status
+   *        description: invite status
+   *        schema:
+   *          $ref: '#/definition/invites'
    */
   app.get('/invite', auth, (req, res) => {
-    return res.status(200).json({ status: 'OK' })
+    const { active } = req.query
+    const bActive = active ? ( active === 'true' ) : null
+
+    return tokenManager.getInvites(bActive)
+      .then(invites => {
+        return res.status(200).json(invites)
+      })
+      .catch(error => {
+        return res.status(500).json({ status: 'FAILED', error: error.message })
+      })
   })
 
   /**

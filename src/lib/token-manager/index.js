@@ -62,6 +62,7 @@ module.exports = class TokenManager {
     data.token = token
     data.created = current.unix()
     data.expired = current.add(7, 'days').unix()
+    data.active = false
 
     return this._storeInviteToken(data)
   }
@@ -83,6 +84,9 @@ module.exports = class TokenManager {
    * @param {number} data.clientId
    * @param {string} data.appKey
    * @param {string} data.appUrl
+   * @param {timestamp} data.created
+   * @param {timestamp} data.expired
+   * @param {boolean} data.active
    *
    * @return {Promise.<object>} - data
    */
@@ -99,6 +103,9 @@ module.exports = class TokenManager {
    * @param {number} data.clientId
    * @param {string} data.appKey
    * @param {string} data.appUrl
+   * @param {timestamp} data.created
+   * @param {timestamp} data.expired
+   * @param {boolean} data.active
    *
    * @return {Promise.<object>} - data
    */
@@ -114,6 +121,9 @@ module.exports = class TokenManager {
    * @param {number} data.clientId
    * @param {string} data.appKey
    * @param {string} data.appUrl
+   * @param {timestamp} data.created
+   * @param {timestamp} data.expired
+   * @param {boolean} data.active
    *
    * @return {Promise.<object>} - data
    */
@@ -136,6 +146,14 @@ module.exports = class TokenManager {
         const isValid = this._isValid(invite)
 
         return isValid ? invite : null
+      })
+      .then(invite => {
+        if (!invite) {
+          return null
+        }
+
+        invite.active = true
+        return this._updateInvite(invite)
       })
   }
 
@@ -160,6 +178,7 @@ module.exports = class TokenManager {
    * @param {string} invite.token
    * @param {timestamp} invite.created
    * @param {timestamp} invite.expired
+   * @param {boolean} invite.active
    *
    * @return {boolean} result
    */
@@ -199,4 +218,97 @@ module.exports = class TokenManager {
 
     return Promise.resolve(invite)
   }
+
+  /**
+   * Update invite
+   *
+   * @param {object} invite
+   * @param {string} invite.user
+   * @param {number} invite.clientId
+   * @param {string} invite.appKey
+   * @param {string} invite.token
+   * @param {timestamp} invite.created
+   * @param {timestamp} invite.expired
+   * @param {boolean} invite.active
+   *
+   * @return {Promise.<object>} invite
+   */
+  _updateInvite (invite) {
+    return this._updateInDatabase(invite)
+      .then(invite => this._updateInMemory(invite))
+  }
+
+  /**
+   * Update invite in database
+   *
+   * @param {object} invite
+   * @param {string} invite.user
+   * @param {number} invite.clientId
+   * @param {string} invite.appKey
+   * @param {string} invite.token
+   * @param {timestamp} invite.created
+   * @param {timestamp} invite.expired
+   * @param {boolean} invite.active
+   *
+   * @return {Promise.<object>} invite
+   */
+   _updateInDatabase (invite) {
+     return Promise.resolve(invite)
+   }
+
+   /**
+    * Update invite in memory
+    *
+    * @param {object} invite
+    * @param {string} invite.user
+    * @param {number} invite.clientId
+    * @param {string} invite.appKey
+    * @param {string} invite.token
+    * @param {timestamp} invite.created
+    * @param {timestamp} invite.expired
+    * @param {boolean} invite.active
+    *
+    * @return {Promise.<object>} invite
+    */
+    _updateInMemory (invite) {
+      if (!this._tokens) {
+        return Promise.reject(new Error('In memory corrupted'))
+      }
+
+      this._tokens[invite.userId] = invite
+
+      return Promise.resolve(invite)
+    }
+
+    /**
+     * Get invites list
+     *
+     * @param {void|boolean} active
+     *
+     * @return {Promise.<array>}
+     */
+    getInvites (active) {
+      if (!this._tokens) {
+        return Promise.reject(new Error('In memory corrupted'))
+      }
+
+      let invites = []
+
+      if (active === null || active === undefined) {
+        for (const key in this._tokens) {
+          const record = this._tokens[key]
+          invites.push({ userId: record.userId, active: record.active })
+        }
+      } else {
+        for (const key in this._tokens) {
+          const record = this._tokens[key]
+
+          if (record.active === active) {
+            invites.push({ userId: record.userId, active: record.active })
+          }
+        }
+      }
+
+      return Promise.resolve(invites)
+    }
 }
