@@ -17,7 +17,7 @@ module.exports = class TokenManager {
    * @param {string} info.appKey
    * @param {string} info.appUrl
    *
-   * @return {Promise.<string>}
+   * @return {Promise.<object>}
    */
   createInvite (info) {
     return this._hasExisting(info)
@@ -52,7 +52,7 @@ module.exports = class TokenManager {
    * @param {string} info.appKey
    * @param {string} info.appUrl
    *
-   * @return {Promise.<string>} - token
+   * @return {Promise.<object>} - token
    */
   _createToken (info) {
     const current = moment()
@@ -121,5 +121,82 @@ module.exports = class TokenManager {
     this._tokens[data.userId] = data
 
     return Promise.resolve(data)
+  }
+
+  /**
+   * Validate invite token
+   *
+   * @param {string} token
+   *
+   * @return {Promise.<object>} invite
+   */
+  validateInvite (token) {
+    return this._retrieveInvite(token)
+      .then(invite => {
+        const isValid = this._isValid(invite)
+
+        return isValid ? invite : null
+      })
+  }
+
+  /**
+   * Retrive invite from store
+   *
+   * @param {string} token
+   *
+   * @return {Promise.<object>} invite
+   */
+  _retrieveInvite (token) {
+    return this._checkInMemory(token)
+  }
+
+  /**
+   * Check if invite is valid
+   *
+   * @param {object} invite
+   * @param {string} invite.user
+   * @param {number} invite.clientId
+   * @param {string} invite.appKey
+   * @param {string} invite.token
+   * @param {timestamp} invite.created
+   * @param {timestamp} invite.expired
+   *
+   * @return {boolean} result
+   */
+  _isValid (invite) {
+    if (!invite || !invite.expired) {
+      return false
+    }
+
+    const current = moment()
+    const expiry = moment.unix(invite.expired)
+
+    return current.isBefore(expiry)
+  }
+
+  /**
+   * Check if token store in memory
+   *
+   * @param {string} token
+   *
+   * @return {Promise.<object>} invite
+   */
+  _checkInMemory (token) {
+    if (!this._tokens) {
+      return Promise.reject(new Error('In memory corrupted'))
+    }
+
+    let invite
+
+    for (const key in this._tokens) {
+      const record = this._tokens[key]
+
+      if (record.token === token) {
+        invite = record
+        break
+      }
+    }
+
+    return Promise.resolve(invite)
   }
 }

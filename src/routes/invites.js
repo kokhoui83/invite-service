@@ -96,7 +96,7 @@ module.exports = function ({ app, tokenManager }) {
       .then(invite => {
         return res.status(200).json({
           inviteToken: invite.token,
-          validTo: moment(invite.expired).utc().format('DD/MM/YYYY HH:mm:ss')
+          validTo: moment.unix(invite.expired).utc().format('DD/MM/YYYY HH:mm:ss')
         })
       })
       .catch(error => {
@@ -136,6 +136,15 @@ module.exports = function ({ app, tokenManager }) {
       return res.status(400).json({ status: 'FAILED', error: error.message })
     }
 
-    return res.status(200).json({ status: 'OK' })
+    return tokenManager.validateInvite(req.body.inviteToken)
+      .then(invite => {
+        return res.status(200).json({
+          appKey: invite.appKey,
+          appUrl: invite.appUrl
+        })
+      })
+      .catch(error => {
+        return res.status(500).json({ status: 'FAILED', error: error.message })
+      })
   })
 }

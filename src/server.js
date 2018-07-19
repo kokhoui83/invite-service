@@ -45,7 +45,7 @@ module.exports = function (callback) {
   })
 
   if (callback) {
-    return callback(null, { app })
+    return callback(null, { app, tokenManager })
   }
 
   const server = app.listen(config.app.port, config.app.host, (err) => {

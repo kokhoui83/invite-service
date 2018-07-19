@@ -1,16 +1,24 @@
 const assert = require('assert')
 const supertest = require('supertest')
+const sinon = require('sinon')
 
 const server = require('../../../src/server')
 
 describe('Routes - invite', () => {
+  let sandbox = sinon.createSandbox()
   let request
+  let _context
 
   before((done) => {
-    server((err, { app }) => {
-      request = supertest(app)
+    server((err, context) => {
+      request = supertest(context.app)
+      _context = context
       done()
     })
+  })
+
+  afterEach(() => {
+    sandbox.restore()
   })
 
   describe('GET /invite', () => {
@@ -48,8 +56,8 @@ describe('Routes - invite', () => {
           .end((err, res) => {
             if (err) { return done(err) }
             assert(res)
-            assert(res.body.hasOwnProperty('status'))
-            assert.equal(res.body.status, 'OK')
+            assert(res.body.hasOwnProperty('inviteToken'))
+            assert(res.body.hasOwnProperty('validTo'))
 
             done()
           })
@@ -145,10 +153,22 @@ describe('Routes - invite', () => {
 
   describe('POST /invite/validate', () => {
     context('validate invite', () => {
-      it('shoudl return success', (done) => {
+      it('should return success', (done) => {
         const data = {
           inviteToken: 'd4f434'
         }
+
+        const expected = {
+          appKey: '4d4f434841-373836313836303830-3430-616e64726f6964',
+          appUrl: 'https://test.example.com/2.1'
+        }
+
+        const mockTokenMgr = sandbox.mock(_context.tokenManager)
+        mockTokenMgr
+          .expects('validateInvite')
+          .withArgs(data.inviteToken)
+          .once()
+          .resolves(expected)
 
         request
           .post(`/invite/validate`)
@@ -157,9 +177,11 @@ describe('Routes - invite', () => {
           .end((err, res) => {
             if (err) { return done(err) }
             assert(res)
-            assert(res.body.hasOwnProperty('status'))
-            assert.equal(res.body.status, 'OK')
-
+            assert(res.body.hasOwnProperty('appKey'))
+            assert(res.body.hasOwnProperty('appUrl'))
+            assert.equal(res.body.appKey, expected.appKey)
+            assert.equal(res.body.appUrl, expected.appUrl)
+            mockTokenMgr.verify()
             done()
           })
       })
@@ -171,6 +193,11 @@ describe('Routes - invite', () => {
           inviteToken: 123456
         }
 
+        const mockTokenMgr = sandbox.mock(_context.tokenManager)
+        mockTokenMgr
+          .expects('validateInvite')
+          .never()
+
         request
           .post(`/invite/validate`)
           .send(data)
@@ -180,7 +207,7 @@ describe('Routes - invite', () => {
             assert(res)
             assert(res.body.hasOwnProperty('status'))
             assert.equal(res.body.status, 'FAILED')
-
+            mockTokenMgr.verify()
             done()
           })
       })
@@ -190,6 +217,11 @@ describe('Routes - invite', () => {
           token: '123456'
         }
 
+        const mockTokenMgr = sandbox.mock(_context.tokenManager)
+        mockTokenMgr
+          .expects('validateInvite')
+          .never()
+
         request
           .post(`/invite/validate`)
           .send(data)
@@ -199,7 +231,7 @@ describe('Routes - invite', () => {
             assert(res)
             assert(res.body.hasOwnProperty('status'))
             assert.equal(res.body.status, 'FAILED')
-
+            mockTokenMgr.verify()
             done()
           })
       })
