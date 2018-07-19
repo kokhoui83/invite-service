@@ -1,5 +1,6 @@
 const s = require('ht-schema')
 const moment = require('moment')
+const auth = require('../lib/auth-manager')
 
 module.exports = function ({ app, tokenManager }) {
   /**
@@ -53,7 +54,7 @@ module.exports = function ({ app, tokenManager }) {
    *      200:
    *        description: status
    */
-  app.get('/invite', (req, res) => {
+  app.get('/invite', auth, (req, res) => {
     return res.status(200).json({ status: 'OK' })
   })
 

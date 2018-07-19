@@ -26,12 +26,63 @@ describe('Routes - invite', () => {
       it('should return success', (done) => {
         request
           .get(`/invite`)
+          .auth('test', 'test')
           .expect(200)
           .end((err, res) => {
             if (err) { return done(err) }
             assert(res)
             assert(res.body.hasOwnProperty('status'))
             assert.equal(res.body.status, 'OK')
+
+            done()
+          })
+      })
+    })
+
+    context('invalid auth', () => {
+      it('should return forbidden', (done) => {
+        request
+          .get(`/invite`)
+          .auth('apple', '123')
+          .expect(403)
+          .end((err, res) => {
+            if (err) { return done(err) }
+            assert(res)
+            assert(res.body.hasOwnProperty('status'))
+            assert.equal(res.body.status, 'FAILED')
+
+            done()
+          })
+      })
+    })
+
+    context('missing auth', () => {
+      it('should return forbidden', (done) => {
+        request
+          .get(`/invite`)
+          .expect(403)
+          .end((err, res) => {
+            if (err) { return done(err) }
+            assert(res)
+            assert(res.body.hasOwnProperty('status'))
+            assert.equal(res.body.status, 'FAILED')
+
+            done()
+          })
+      })
+    })
+
+    context('wrong auth', () => {
+      it('should return forbidden', (done) => {
+        request
+          .get(`/invite`)
+          .auth('test', 'wrong')
+          .expect(403)
+          .end((err, res) => {
+            if (err) { return done(err) }
+            assert(res)
+            assert(res.body.hasOwnProperty('status'))
+            assert.equal(res.body.status, 'FAILED')
 
             done()
           })
