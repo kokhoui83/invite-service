@@ -22,8 +22,21 @@ describe('Routes - invite', () => {
   })
 
   describe('GET /invite', () => {
-    context('check invite route', () => {
+    context('get all invites', () => {
       it('should return success', (done) => {
+        const expected = [
+          { userId: 'a@example.com', active: true },
+          { userId: 'b@example.com', active: true },
+          { userId: 'c@example.com', active: true }
+        ]
+
+        const mockTokenMgr = sandbox.mock(_context.tokenManager)
+        mockTokenMgr
+          .expects('getInvites')
+          .withArgs(null)
+          .once()
+          .resolves(expected)
+
         request
           .get(`/invite`)
           .auth('test', 'test')
@@ -31,8 +44,71 @@ describe('Routes - invite', () => {
           .end((err, res) => {
             if (err) { return done(err) }
             assert(res)
-            assert(res.body.hasOwnProperty('status'))
-            assert.equal(res.body.status, 'OK')
+            const invites = JSON.parse(res.text)
+            assert(invites instanceof Array)
+            assert.equal(invites.length, expected.length)
+            mockTokenMgr.verify()
+
+            done()
+          })
+      })
+    })
+
+    context('get active invites', () => {
+      it('should return success', (done) => {
+        const expected = [
+          { userId: 'a@example.com', active: true },
+          { userId: 'c@example.com', active: true }
+        ]
+
+        const mockTokenMgr = sandbox.mock(_context.tokenManager)
+        mockTokenMgr
+          .expects('getInvites')
+          .withArgs(true)
+          .once()
+          .resolves(expected)
+
+        request
+          .get(`/invite?active=true`)
+          .auth('test', 'test')
+          .expect(200)
+          .end((err, res) => {
+            if (err) { return done(err) }
+            assert(res)
+            const invites = JSON.parse(res.text)
+            assert(invites instanceof Array)
+            assert.equal(invites.length, expected.length)
+            mockTokenMgr.verify()
+
+            done()
+          })
+      })
+    })
+
+    context('get inactive invites', () => {
+      it('should return success', (done) => {
+        const expected = [
+          { userId: 'b@example.com', active: false }
+        ]
+
+        const mockTokenMgr = sandbox.mock(_context.tokenManager)
+        mockTokenMgr
+          .expects('getInvites')
+          .withArgs(false)
+          .once()
+          .resolves(expected)
+
+        request
+          .get(`/invite?active=false`)
+          .auth('test', 'test')
+          .expect(200)
+          .end((err, res) => {
+            if (err) { return done(err) }
+            assert(res)
+            const invites = JSON.parse(res.text)
+            assert(invites instanceof Array)
+            assert.equal(invites.length, expected.length)
+            mockTokenMgr.verify()
 
             done()
           })
@@ -83,6 +159,64 @@ describe('Routes - invite', () => {
             assert(res)
             assert(res.body.hasOwnProperty('status'))
             assert.equal(res.body.status, 'FAILED')
+
+            done()
+          })
+      })
+    })
+  })
+
+  describe('DELETE /invite/:clientId', () => {
+    context('valid clientId', () => {
+      it('should revoke invite', (done) => {
+        const expected = {
+          userId: 'aleks@example.com',
+          clientId: 10,
+          active: false,
+          revoke: true
+        }
+
+        const mockTokenMgr = sandbox.mock(_context.tokenManager)
+        mockTokenMgr
+          .expects('revokeInvite')
+          .withArgs(expected.clientId)
+          .once()
+          .resolves(expected)
+
+        request
+          .delete(`/invite/${expected.clientId}`)
+          .auth('test', 'test')
+          .expect(200)
+          .end((err, res) => {
+            if (err) { return done(err) }
+            assert(res)
+            assert(res.body.hasOwnProperty('revoke'))
+            assert.equal(res.body.clientId, expected.clientId)
+            assert.equal(res.body.revoke, expected.revoke)
+            mockTokenMgr.verify
+
+            done()
+          })
+      })
+    })
+
+    context('missing clientId', () => {
+      it('should return 400', (done) => {
+        const mockTokenMgr = sandbox.mock(_context.tokenManager)
+        mockTokenMgr
+          .expects('revokeInvite')
+          .never()
+
+        request
+          .delete(`/invite/wrong`)
+          .auth('test', 'test')
+          .expect(400)
+          .end((err, res) => {
+            if (err) { return done(err) }
+            assert(res)
+            assert(res.body.hasOwnProperty('status'))
+            assert.equal(res.body.status, 'FAILED')
+            mockTokenMgr.verify()
 
             done()
           })

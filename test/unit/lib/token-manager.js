@@ -24,7 +24,7 @@ describe('Token Manager', () => {
     })
   })
 
-  describe('create invite', () => {
+  describe('Create invite', () => {
     context('create new invite', () => {
       it('should return invite record', () => {
         const data = {
@@ -43,7 +43,7 @@ describe('Token Manager', () => {
     })
   })
 
-  describe('validate invite', () => {
+  describe('Validate invite', () => {
     context('check valid invite token', () => {
       after(() => {
         manager._tokens = {}
@@ -58,7 +58,9 @@ describe('Token Manager', () => {
           appUrl: 'https://test.example.com/2.1',
           token: 'a1b2c3',
           created: current.unix(),
-          expired: current.add(7, 'days').unix()
+          expired: current.add(7, 'days').unix(),
+          active: false,
+          revoke: false
         }
 
         manager._tokens[expected.userId] = expected
@@ -66,12 +68,41 @@ describe('Token Manager', () => {
         return manager.validateInvite(expected.token)
           .then(invite => {
             assert(invite)
+            assert.equal(invite.active, true)
+          })
+      })
+    })
+
+    context('invite revoke', () => {
+      after(() => {
+        manager._tokens = {}
+      })
+
+      it('should return error', () => {
+        const current = moment()
+        const expected = {
+          userId: 'aleks@example.com',
+          clientId: 50,
+          appKey: '4d4f434841-373836313836303830-3430-616e64726f6964',
+          appUrl: 'https://test.example.com/2.1',
+          token: 'a1b2c3',
+          created: current.unix(),
+          expired: current.add(7, 'days').unix(),
+          active: false,
+          revoke: true
+        }
+
+        manager._tokens[expected.userId] = expected
+
+        return manager.validateInvite(expected.token)
+          .then(invite => {
+            assert.equal(invite, null)
           })
       })
     })
   })
 
-  describe('get invites', () => {
+  describe('Get invites', () => {
     before(() => {
       const current = moment()
       manager._tokens = {
@@ -83,7 +114,8 @@ describe('Token Manager', () => {
           token: 'a1b2c1',
           created: current.unix(),
           expired: current.add(7, 'days').unix(),
-          active: false
+          active: false,
+          revoke: false
         },
         'b@test.com': {
           userId: 'b@test.com',
@@ -93,7 +125,8 @@ describe('Token Manager', () => {
           token: 'a1b2c2',
           created: current.unix(),
           expired: current.add(7, 'days').unix(),
-          active: true
+          active: true,
+          revoke: false
         },
         'c@test.com': {
           userId: 'c@test.com',
@@ -103,7 +136,8 @@ describe('Token Manager', () => {
           token: 'a1b2c3',
           created: current.unix(),
           expired: current.add(7, 'days').unix(),
-          active: true
+          active: true,
+          revoke: false
         }
       }
     })
@@ -144,6 +178,64 @@ describe('Token Manager', () => {
               const invite = invites[i]
               assert.equal(invite.active, active)
             }
+          })
+      })
+    })
+  })
+
+  describe('Revoke invite', () => {
+    before(() => {
+      const current = moment()
+      manager._tokens = {
+        'a@test.com': {
+          userId: 'a@test.com',
+          clientId: 10,
+          appKey: '1111-2222-3333-0001',
+          appUrl: 'https://test.example.com/2.1',
+          token: 'a1b2c1',
+          created: current.unix(),
+          expired: current.add(7, 'days').unix(),
+          active: false,
+          revoke: false
+        },
+        'b@test.com': {
+          userId: 'b@test.com',
+          clientId: 11,
+          appKey: '1111-2222-3333-0002',
+          appUrl: 'https://test.example.com/2.1',
+          token: 'a1b2c2',
+          created: current.unix(),
+          expired: current.add(7, 'days').unix(),
+          active: true,
+          revoke: false
+        },
+        'c@test.com': {
+          userId: 'c@test.com',
+          clientId: 12,
+          appKey: '1111-2222-3333-0003',
+          appUrl: 'https://test.example.com/2.1',
+          token: 'a1b2c3',
+          created: current.unix(),
+          expired: current.add(7, 'days').unix(),
+          active: true,
+          revoke: false
+        }
+      }
+    })
+
+    after(() => {
+      manager._tokens = {}
+    })
+
+    context('revoke valid invite', () => {
+      it('should revoke success', () => {
+        const clientId = 10
+
+        return manager.revokeInvite(clientId)
+          .then(invite => {
+            assert(invite)
+            assert.equal(invite.clientId, clientId)
+            assert.equal(invite.revoke, true)
           })
       })
     })

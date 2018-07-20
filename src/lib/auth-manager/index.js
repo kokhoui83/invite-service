@@ -1,6 +1,15 @@
 const auth = require('basic-auth')
 const config = require('config')
 
+/**
+ * Auth Middleware
+ *
+ * @param {object} req
+ * @param {object} res
+ * @param {object} next
+ *
+ * @return {object}
+ */
 module.exports = function (req, res, next) {
   const user = auth(req)
   const users = config.users

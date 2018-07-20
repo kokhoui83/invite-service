@@ -63,6 +63,7 @@ module.exports = class TokenManager {
     data.created = current.unix()
     data.expired = current.add(7, 'days').unix()
     data.active = false
+    data.revoke = false
 
     return this._storeInviteToken(data)
   }
@@ -87,6 +88,7 @@ module.exports = class TokenManager {
    * @param {timestamp} data.created
    * @param {timestamp} data.expired
    * @param {boolean} data.active
+   * @param {boolean} data.revoke
    *
    * @return {Promise.<object>} - data
    */
@@ -106,6 +108,7 @@ module.exports = class TokenManager {
    * @param {timestamp} data.created
    * @param {timestamp} data.expired
    * @param {boolean} data.active
+   * @param {boolean} data.revoke
    *
    * @return {Promise.<object>} - data
    */
@@ -124,6 +127,7 @@ module.exports = class TokenManager {
    * @param {timestamp} data.created
    * @param {timestamp} data.expired
    * @param {boolean} data.active
+   * @param {boolean} data.revoke
    *
    * @return {Promise.<object>} - data
    */
@@ -141,7 +145,7 @@ module.exports = class TokenManager {
    * @return {Promise.<object>} invite
    */
   validateInvite (token) {
-    return this._retrieveInvite(token)
+    return this._retrieveInvite({ token })
       .then(invite => {
         const isValid = this._isValid(invite)
 
@@ -164,8 +168,8 @@ module.exports = class TokenManager {
    *
    * @return {Promise.<object>} invite
    */
-  _retrieveInvite (token) {
-    return this._checkInMemory(token)
+  _retrieveInvite ({ token, clientId }) {
+    return this._checkInMemory({ token, clientId })
   }
 
   /**
@@ -190,7 +194,7 @@ module.exports = class TokenManager {
     const current = moment()
     const expiry = moment.unix(invite.expired)
 
-    return current.isBefore(expiry)
+    return current.isBefore(expiry) && !invite.revoke
   }
 
   /**
@@ -200,7 +204,7 @@ module.exports = class TokenManager {
    *
    * @return {Promise.<object>} invite
    */
-  _checkInMemory (token) {
+  _checkInMemory ({ token, clientId }) {
     if (!this._tokens) {
       return Promise.reject(new Error('In memory corrupted'))
     }
@@ -210,9 +214,18 @@ module.exports = class TokenManager {
     for (const key in this._tokens) {
       const record = this._tokens[key]
 
-      if (record.token === token) {
-        invite = record
-        break
+      if (token !== null && token !== undefined) {
+        if (record.token === token) {
+          invite = record
+          break
+        }
+      }
+
+      if (clientId !== null && clientId !== undefined) {
+        if (record.clientId === clientId) {
+          invite = record
+          break
+        }
       }
     }
 
@@ -297,18 +310,51 @@ module.exports = class TokenManager {
       if (active === null || active === undefined) {
         for (const key in this._tokens) {
           const record = this._tokens[key]
-          invites.push({ userId: record.userId, active: record.active })
+          invites.push({
+            userId: record.userId,
+            clientId: record.clientId,
+            active: record.active,
+            revoke: record.revoke
+          })
         }
       } else {
         for (const key in this._tokens) {
           const record = this._tokens[key]
 
           if (record.active === active) {
-            invites.push({ userId: record.userId, active: record.active })
+            invites.push({
+              userId: record.userId,
+              clientId: record.clientId,
+              active: record.active,
+              revoke: record.revoke
+            })
           }
         }
       }
 
       return Promise.resolve(invites)
+    }
+
+    /**
+     * Revoke invite
+     *
+     * @param {number} clientId
+     *
+     * @return {Promise.<object>} invite
+     */
+    revokeInvite (clientId) {
+      if (!this._tokens) {
+        return Promise.reject(new Error('In memory corrupted'))
+      }
+
+      return this._retrieveInvite({ clientId })
+        .then(invite => {
+          if (!invite) {
+            return null
+          }
+
+          invite.revoke = true
+          return this._updateInvite(invite)
+        })
     }
 }

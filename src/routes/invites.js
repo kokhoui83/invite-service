@@ -47,13 +47,43 @@ module.exports = function ({ app, tokenManager }) {
    *      - userId
    *      - active
    *      properties:
+   *        userId:
+   *          type: string
+   *          description: the user id that requested the invite to be generated
+   *          example: aleks@example.com
+   *        clientId:
+   *          type: integer
+   *          description: the client id for which this invite is generated
+   *          example: 50
+   *        active:
+   *          type: boolean
+   *          description: state of invite
+   *          example: true
+   *        revoke:
+   *          type: boolean
+   *          description: state of revoke
+   *          example: true
+   *  invite:
+   *    type: object
+   *    required:
+   *    - userId
+   *    - active
+   *    properties:
    *      userId:
    *        type: string
    *        description: the user id that requested the invite to be generated
    *        example: aleks@example.com
+   *      clientId:
+   *        type: integer
+   *        description: the client id for which this invite is generated
+   *        example: 50
    *      active:
    *        type: boolean
    *        description: state of invite
+   *        example: true
+   *      revoke:
+   *        type: boolean
+   *        description: state of revoke
    *        example: true
    */
 
@@ -63,12 +93,12 @@ module.exports = function ({ app, tokenManager }) {
    *  get:
    *    tags:
    *    - invite
-   *    description: test invite root path
+   *    description: get invite list
    *    produces:
    *    - application/json
    *    responses:
    *      200:
-   *        description: invite status
+   *        description: invites status
    *        schema:
    *          $ref: '#/definition/invites'
    */
@@ -79,6 +109,43 @@ module.exports = function ({ app, tokenManager }) {
     return tokenManager.getInvites(bActive)
       .then(invites => {
         return res.status(200).json(invites)
+      })
+      .catch(error => {
+        return res.status(500).json({ status: 'FAILED', error: error.message })
+      })
+  })
+
+  /**
+   * @swagger
+   * /invite/:clientId
+   *  delete:
+   *    tag:
+   *    - invite
+   *    description: revoke invite
+   *    produces:
+   *    - application/json
+   *    responses:
+   *      200:
+   *        description: invite status
+   *        schema:
+   *          $ref: '#/definition/invite'
+   */
+  app.delete('/invite/:clientId', auth, (req, res) => {
+    const schema = s.Object({
+      clientId: s.Number()
+    })
+
+    try {
+      schema.validate(req.params)
+    } catch (error) {
+      return res.status(400).json({ status: 'FAILED', error: error.message })
+    }
+
+    const { clientId } = req.params
+
+    return tokenManager.revokeInvite(parseInt(clientId))
+      .then(invite => {
+        return res.status(200).json(invite)
       })
       .catch(error => {
         return res.status(500).json({ status: 'FAILED', error: error.message })
