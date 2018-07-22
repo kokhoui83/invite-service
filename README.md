@@ -8,4 +8,4 @@ Service to create invite token and to manage invite
 `NODE_ENV=<environment> npm start`
 
 ## API Document
-`http://localhost:3000/api-doc`
+`http://localhost:3000/api-docs`
