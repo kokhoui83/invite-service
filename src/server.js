@@ -3,6 +3,7 @@ const bodyParser = require('body-parser')
 const config = require('config')
 const path = require('path')
 const fs = require('fs')
+const swaggerUi = require('swagger-ui-express')
 const swaggerjsdoc = require('swagger-jsdoc')
 const pkg = require('../package')
 
@@ -18,7 +19,7 @@ module.exports = function (callback) {
         version: pkg.version,
       },
     },
-    apis: ['./routes/*.js'],
+    apis: ['./src/routes/*.js'],
   }
 
   const swaggerSpec = swaggerjsdoc(options)
@@ -29,6 +30,8 @@ module.exports = function (callback) {
   app.use('/ping', (req, res) => {
     res.send('pong')
   })
+
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   app.get('/swagger.json', function(req, res) {
     res.setHeader('Content-Type', 'application/json');

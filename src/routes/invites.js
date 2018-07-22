@@ -117,7 +117,7 @@ module.exports = function ({ app, tokenManager }) {
 
   /**
    * @swagger
-   * /invite/:clientId
+   * /invite/:clientId:
    *  delete:
    *    tag:
    *    - invite
