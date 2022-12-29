@@ -15,7 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "basic-auth": "^2.0.0",
-    "config": "^1.30.0",
+    "config": "^3.3.8",
     "express": "^4.16.3",
     "ht-schema": "^3.4.0",
     "moment": "^2.22.2",
