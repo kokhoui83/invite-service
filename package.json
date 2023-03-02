@@ -23,7 +23,7 @@
     "swagger-ui-express": "^3.0.10"
   },
   "devDependencies": {
-    "mocha": "^5.2.0",
+    "mocha": "^10.2.0",
     "nodemon": "^2.0.12",
     "sinon": "^6.3.5",
     "supertest": "^3.1.0"
